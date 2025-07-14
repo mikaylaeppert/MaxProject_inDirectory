@@ -1,0 +1,34 @@
+// CreateMAXprojection_inDirectory
+// This ImageJ macro processes all images in a user-selected folder by opening each image,
+// creating a max projection of z-stacks, and saving each channel as a separate TIFF in a 
+// new output subfolder.
+
+input = getDirectory("Choose a folder with z-stack TIFFs");  // Prompt user to select input directory
+
+list = getFileList(input);  // Get a list of all files and folders in the input directory
+
+output = input + "Max Projections" + File.separator;  // Define the output directory path for max projection images
+
+setBatchMode(true);  // Enable batch mode to speed up processing and suppress image updates
+
+if (File.exists(output))  // Check if the output directory already exists
+   exit("Destination directory already exists; remove it and then run this macro again");  // Exit if the folder exists to prevent overwriting
+
+File.makeDirectory(output);  // Create the output directory
+
+for (i = 0; i < list.length; i++) {  // Loop through every file/folder in the input directory
+
+    if (endsWith(list[i], ".tif")) {  // Process only files ending with ".tif"
+        
+        run("Bio-Formats Importer", "open=[" + input + list[i] + "] autoscale color_mode=Colorized rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT");  
+        // Open the TIFF file using Bio-Formats Importer with specific options (autoscale, colorized, hyperstack view)
+
+        run("Z Project...", "projection=[Max Intensity]");  // Perform a maximum intensity Z projection on the opened stack
+
+        saveAs("tiff", output + getTitle);  // Save the resulting max projection image as TIFF in the output folder
+
+        close();  // Close the max projection image
+
+        close();  // Close the original opened image stack
+    }
+}
